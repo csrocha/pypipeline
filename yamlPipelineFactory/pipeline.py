@@ -1,15 +1,12 @@
-from yaml import YAMLObject, Loader
+import asyncio
+from .processor import processor
 
 
-class Pipeline(YAMLObject):
-    yaml_loader = Loader
-    yaml_tag = u"!Pipeline"
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        data = loader.construct_sequence(node)
-        return cls(tasks=data)
-
+@processor('!Pipeline')
+class Pipeline:
+    """
+    Pipeline class. Store all task which must be executed in parallel.
+    """
     def __init__(self, name=None, tasks=None):
         self._name = name
         self._tasks = tasks
@@ -17,5 +14,7 @@ class Pipeline(YAMLObject):
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self._name}, tasks={self._tasks})"
 
-    def run(self):
-        self._tasks[-1].run()
+    async def run(self):
+        async_tasks = [asyncio.create_task(task.run()) for task in self._tasks]
+
+        await asyncio.gather(*async_tasks)

@@ -4,12 +4,14 @@ import os
 
 @processor(u'!MyNewProcessor')
 class MyNewProcessor:
-    def __init__(self, source=None):
+    def __init__(self, source=None, target=None):
         self._source = source
+        self._target = target
 
-    def run(self):
-        for data in self._source.run():
-            yield [int(data[0])+int(data[1])]
+    async def run(self):
+        async with self._target as target:
+            async for data in self._source:
+                await target.put([int(data[0])+int(data[1])])
 
 
 def test_null_pipeline():
@@ -18,12 +20,16 @@ def test_null_pipeline():
 
     yaml_string = """
 --- !Pipeline
+name: Test pipeline
+tasks:
     - !CsvReader &Input
         filename: test_input.csv
-    - !MyNewProcessor &MyProcessor
-        source: *Input
-    - !CsvWriter &Output
-        source: *MyProcessor
+        target: !Queue &TestInput
+    - !MyNewProcessor
+        source: *TestInput
+        target: !Queue &MyNewProcessorOutput
+    - !CsvWriter
+        source: *MyNewProcessorOutput
         filename: test_output.csv
 """
     builder = Builder(yaml_string)

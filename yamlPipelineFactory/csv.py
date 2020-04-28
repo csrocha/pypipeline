@@ -1,37 +1,25 @@
-from .yaml import Loader, YAMLObject
+from .processor import processor
 import csv
 
 
-class CsvReader(YAMLObject):
-    yaml_loader = Loader
-    yaml_tag = u"!CsvReader"
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        data = loader.construct_mapping(node)
-        return cls(filename=data['filename'])
-
-    def __init__(self, filename=None):
+@processor('!CsvReader')
+class CsvReader:
+    def __init__(self, filename=None, target=None):
         self._filename = filename
+        self._target = target
 
     def __repr__(self):
         return f"{self.__class__.__name__}(filename={self._filename})"
 
-    def run(self):
+    async def run(self):
         with open(self._filename) as fd:
-            for row in csv.reader(fd):
-                yield row
+            async with self._target as target:
+                for row in csv.reader(fd):
+                    await target.put(row)
 
 
-class CsvWriter(YAMLObject):
-    yaml_loader = Loader
-    yaml_tag = u"!CsvWriter"
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        data = loader.construct_mapping(node)
-        return cls(filename=data['filename'], source=data['source'])
-
+@processor('!CsvWriter')
+class CsvWriter:
     def __init__(self, filename=None, source=None):
         self._filename = filename
         self._source = source
@@ -39,8 +27,9 @@ class CsvWriter(YAMLObject):
     def __repr__(self):
         return f"{self.__class__.__name__}(source={self._source}, filename={self._filename})"
 
-    def run(self):
+    async def run(self):
         with open(self._filename, 'w') as fd:
             writer = csv.writer(fd)
-            for d in self._source.run():
-                writer.writerow(d)
+
+            async for data in self._source:
+                writer.writerow(data)
