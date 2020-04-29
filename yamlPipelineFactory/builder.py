@@ -17,7 +17,7 @@ class Builder:
 
     def run(self):
         """
-        Start a pipeline.
+        Run the pipeline in asynchronous mode. Wait to end full pipeline.
 
         :return:
         :rtype:

@@ -9,5 +9,5 @@ setup(
     author='Cristian S. Rocha',
     author_email='csrocha@gmail.com',
     description='Pipeline builder from YAML blueprint.',
-    install_requires=['PyYAML']
+    install_requires=['PyYAML', 'pandas']
 )
