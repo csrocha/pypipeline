@@ -1,8 +1,9 @@
-from yamlPipelineFactory import Builder, processor
+from yamlPipelineFactory import Builder, node_class
 import os
+import pytest
 
 
-@processor(u'!MyNewProcessor')
+@node_class(u'!MyNewProcessor')
 class MyNewProcessor:
     """
     This is a user level class to Node.
@@ -31,7 +32,7 @@ class MyNewProcessor:
                 await target.put([int(data[0])+int(data[1])])
 
 
-def test_myprocessor_pipeline():
+def _test_myprocessor_pipeline(event_loop):
     """
     Test to create and execute a pipeline using the node class MyNewProcessor
 
@@ -55,7 +56,7 @@ nodes:
         source: *MyNewProcessorOutput
         filename: test_output.csv
 """
-    builder = Builder(yaml_string)
+    builder = Builder(yaml_string, event_loop)
     builder.run()
 
     with open("test_output.csv") as outfile:

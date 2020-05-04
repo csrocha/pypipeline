@@ -1,21 +1,22 @@
-from .processor import processor
+from .node import node_class
+from .exceptions import StopBucket, StopProcess
 import csv
 
 
-@processor('!CsvReader')
+@node_class('!CsvReader')
 class CsvReader:
     """
     CsvReader node descriptor. Read a csv file on filesystem and push each row to the pipeline.
 
-    No Source.
+    Filename: [str]
     Target: [str]
     """
     def __init__(self, filename=None, target=None, **kwargs):
         """
         Constructor of the CsvReader. Create a node to read an specific file and push rows to the target queue.
 
-        :param filename:  Filename to take rows.
-        :type filename: str
+        :param filename:  Filename queue to take rows.
+        :type filename: Queue
         :param target: Target queue to push rows.
         :type target: Queue
         :param kwargs: Parameters for cvs.reader functions
@@ -41,13 +42,15 @@ class CsvReader:
         :return: None
         :rtype: None
         """
-        with open(self._filename) as fd:
-            async with self._target as target:
-                for row in csv.reader(fd, **self._reader_kwargs):
-                    await target.put(row)
+        async with self._target.ctx(StopProcess):
+            async for filename in self._filename:
+                with open(filename) as fd:
+                    async with self._target.ctx(StopBucket) as target:
+                        for row in csv.reader(fd, **self._reader_kwargs):
+                            await target.put(row)
 
 
-@processor('!CsvWriter')
+@node_class('!CsvWriter')
 class CsvWriter:
     """
     CsvWriter node descriptor. Write a csv file to filesystem taking each pushed message in a Queue.
@@ -60,7 +63,7 @@ class CsvWriter:
         Constructor of the CsvWriter. Create a node to write to an specific file taking rows from a source queue.
 
         :param filename:  Filename to store rows.
-        :type filename: str
+        :type filename: Queue
         :param source: Source queue to get rows.
         :type source: Queue
         :param kwargs: Parameters for cvs.writer functions
@@ -86,8 +89,8 @@ class CsvWriter:
         :return: None
         :rtype: None
         """
-        with open(self._filename, 'w') as fd:
-            writer = csv.writer(fd, **self._writer_kwargs)
-
-            async for data in self._source:
-                writer.writerow(data)
+        async for filename in self._filename:
+            with open(filename, 'w') as fd:
+                writer = csv.writer(fd, **self._writer_kwargs)
+                async for data in self._source.iter(StopBucket):
+                    writer.writerow(data)

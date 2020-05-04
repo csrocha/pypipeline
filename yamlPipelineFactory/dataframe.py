@@ -1,11 +1,11 @@
-from .processor import processor
+from .node import node_class
+from .atools import azip
 import pandas as pd
 
-
-@processor('!DataFrameBuilder')
+@node_class('!DataFrameBuilder')
 class DataFrameBuilder:
     """
-    Pandas dataframe buider node.
+    Pandas dataframe builder node.
     """
     def __init__(self, source=None, target=None):
         """
@@ -30,7 +30,8 @@ class DataFrameBuilder:
 
     async def run(self):
         """
-        Loop execution to retrieve rows from the source queue to create a dataframe and then push it to the target queue.
+        Loop execution to retrieve rows from the source queue to create
+        a dataframe and then push it to the target queue.
 
         :return: Main node corutine
         :rtype: corutine
@@ -43,7 +44,7 @@ class DataFrameBuilder:
             target.put(df)
 
 
-@processor('!DataFrameRowSplit')
+@node_class('!DataFrameRowSplit')
 class DataFrameRowSplit:
     """
     Pandas dataframe row splitter node.
@@ -81,36 +82,15 @@ class DataFrameRowSplit:
                 for index, row in df.iterrows():
                     target.put((index, row))
 
-
-async def azip(*sources):
-    """
-    Asynchronous zip iterator.
-
-    :param sources: List of asyncronous iterators.
-    :type sources: [async iterators]
-    :return: Generator of tuples
-    :rtype: ((sources))
-    """
-
-    source_states = [True] * len(sources)
-
-    while all(source_states):
-        data = [await source.get() if enabled else StopAsyncIteration
-                for source, enabled in zip(sources, source_states)]
-        source_states = [value is not StopAsyncIteration for value in data]
-
-        if all(source_states):
-            yield tuple(data)
-
-
-@processor('!DataFrameJoin')
+@node_class('!DataFrameJoin')
 class DataFrameJoin:
     """
     Pandas dataframe joiner node.
     """
     def __init__(self, left=None, right=None, target=None, **kwargs):
         """
-        Constructor of dataframe joiner node. Take two dataframes from left and right queues and push the joined dataframe to the target queue.
+        Constructor of dataframe joiner node. Take two dataframes from left and right queues
+        and push the joined dataframe to the target queue.
 
         :param left: Left dataframe queue
         :type left: Queue of dataframe

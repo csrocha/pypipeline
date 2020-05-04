@@ -1,8 +1,8 @@
 import asyncio
-from .processor import processor
+from .node import node_class
 
 
-@processor('!Pipeline')
+@node_class('!Pipeline')
 class Pipeline:
     """
     Pipeline class. Store all task which must be executed in parallel.
@@ -21,7 +21,7 @@ class Pipeline:
 
     def __repr__(self):
         """
-        Representation of a Pipeline
+        Pipeline string representation.
 
         :return: String with pipeline information.
         :rtype: str
