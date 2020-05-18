@@ -11,8 +11,6 @@ def node_class(yaml_tag):
     :type yaml_tag: str
     :return: Decorated class included in the loader constructor.
     :rtype: class
-
-    TODO: - Check if class interface has run function.
     """
     def inner(cls):
         """
