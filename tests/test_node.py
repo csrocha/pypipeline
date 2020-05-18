@@ -1,7 +1,8 @@
 import asyncio
 import pytest
-from yamlPipelineFactory import node_sub, QueueNode
-from yamlPipelineFactory.exceptions import StopProcess
+from assemply import node_sub, QueueNode
+from assemply.exceptions import StopProcess
+from .helpers import assert_stop_bucket
 
 
 @pytest.mark.asyncio
@@ -22,17 +23,21 @@ async def test_node_sub_1i_1o():
     await source_queue.put(["1", "2"])
     await source_queue.put(["2", "1"])
     await source_queue.put(["2", "2"])
-    await source_queue.put(StopProcess)
+    await source_queue.put(StopProcess())
 
     assert await target_queue.get() == [1]
+    target_queue.task_done()
     assert await target_queue.get() == [2]
+    target_queue.task_done()
     assert await target_queue.get() == [4]
+    target_queue.task_done()
+    await assert_stop_bucket(target_queue, 0)
 
     await task
 
 
 @pytest.mark.asyncio
-async def _test_node_sub_2i_1o():
+async def test_node_sub_2i_1o():
     """ This test check subrutine node types with two inputs and one output queues """
 
     @node_sub("!Test_2i_1o", inputs=("left", "right"), outputs=("target",))
@@ -53,7 +58,7 @@ async def _test_node_sub_2i_1o():
     await left_queue.put(2)
     await right_queue.put(1)
     await right_queue.put(2)
-    await left_queue.put(StopProcess)
+    await left_queue.put(StopProcess())
     await right_queue.put(1)  # Must not needed.
 
     assert await target_queue.get() == [1]

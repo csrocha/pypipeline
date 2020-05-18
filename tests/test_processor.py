@@ -1,38 +1,53 @@
-from yamlPipelineFactory import Builder, node_sub
+from assemply import PipelineBuilder, node_sub
 import os
+import pytest
+from assemply.exceptions import StopProcess
 
 
 @node_sub("!Test_process", inputs=("source",), outputs=("target",))
-def test(source):
+def node_test(source):
     return [int(source[0])**int(source[1])]
 
 
-def _test_nodesub(event_loop):
+@pytest.mark.asyncio
+async def test_nodesub(event_loop, tmp_path):
     """
     """
-    with open("test_input.csv", "w") as infile:
+    source_file = tmp_path / "test_input.csv"
+    target_file = tmp_path / "test_output.csv"
+
+    with open(source_file, "w") as infile:
         infile.write("1,2")
 
-    yaml_string = """
+    yaml_string = f"""
 --- !Pipeline
 name: Test pipeline
 nodes:
     - !CsvReader &Input
-        filename: test_input.csv
+        filename: !Queue &FileInput
         target: !Queue &TestInput
     - !Test_process
         source: *TestInput
         target: !Queue &MyNewProcessorOutput
     - !CsvWriter
         source: *MyNewProcessorOutput
-        filename: test_output.csv
+        filename: !Queue &FileOutput
+expose:
+    file_input: *FileInput
+    file_output: *FileOutput
 """
-    builder = Builder(yaml_string, event_loop)
-    builder.run()
+    builder = PipelineBuilder(yaml_string)
+    pipeline = builder.build()
 
-    with open("test_output.csv") as outfile:
+    async with pipeline as p:
+        await p.file_input.put(source_file)
+        await p.file_output.put(target_file)
+        await p.file_input.put(StopProcess())
+        await p.file_output.put(StopProcess())
+
+    with open(target_file) as outfile:
         data = outfile.read()
         assert int(data) == 1
 
-    os.remove("test_input.csv")
-    os.remove("test_output.csv")
+    os.remove(source_file)
+    os.remove(target_file)

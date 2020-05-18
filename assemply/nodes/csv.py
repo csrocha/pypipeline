@@ -1,5 +1,4 @@
-from .node import node_class
-from .exceptions import StopBucket, StopProcess
+from assemply.node import node_class
 import csv
 
 
@@ -42,12 +41,12 @@ class CsvReader:
         :return: None
         :rtype: None
         """
-        async with self._target.ctx(StopProcess):
+        async with self._target as main_target:
             async for filename in self._filename:
                 with open(filename) as fd:
-                    async with self._target.ctx(StopBucket) as target:
+                    async with main_target as bucket_target:
                         for row in csv.reader(fd, **self._reader_kwargs):
-                            await target.put(row)
+                            await bucket_target.put(row)
 
 
 @node_class('!CsvWriter')
@@ -92,5 +91,5 @@ class CsvWriter:
         async for filename in self._filename:
             with open(filename, 'w') as fd:
                 writer = csv.writer(fd, **self._writer_kwargs)
-                async for data in self._source.iter(StopBucket):
+                async for data in self._source:
                     writer.writerow(data)

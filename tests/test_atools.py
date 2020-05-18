@@ -1,6 +1,6 @@
-from yamlPipelineFactory import QueueNode
-from yamlPipelineFactory.atools import azip
-from yamlPipelineFactory.exceptions import StopBucket
+from assemply import QueueNode
+from assemply.atools import azip
+from assemply.exceptions import StopBucket
 import pytest
 
 
@@ -14,9 +14,9 @@ async def test_azip_stop():
     await qa.put(1)
     await qb.put(2)
     await qc.put(3)
-    await qa.put(StopBucket)
-    await qb.put(StopBucket)
-    await qc.put(StopBucket)
+    await qa.put(StopBucket(1))
+    await qb.put(StopBucket(1))
+    await qc.put(StopBucket(1))
     await qa.put(4)
     await qb.put(5)
     await qc.put(6)

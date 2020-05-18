@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/yamlPipelineFactory.iml" filepath="$PROJECT_DIR$/yamlPipelineFactory.iml" />
+      <module fileurl="file://$PROJECT_DIR$/assemply.iml" filepath="$PROJECT_DIR$/assemply.iml" />
     </modules>
   </component>
 </project>

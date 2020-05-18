@@ -1,4 +1,4 @@
-from yamlPipelineFactory import Builder, node_class
+from assemply import PipelineBuilder, node_class
 import os
 import pytest
 
@@ -28,40 +28,55 @@ class MyNewProcessor:
         :rtype: None
         """
         async with self._target as target:
-            async for data in self._source:
-                await target.put([int(data[0])+int(data[1])])
+            async for bucket in self._source.buckets(1):
+                async for data in bucket:
+                    await target.put([int(data[0])+int(data[1])])
 
 
-def _test_myprocessor_pipeline(event_loop):
+@pytest.mark.asyncio
+async def test_myprocessor_pipeline(tmp_path):
     """
     Test to create and execute a pipeline using the node class MyNewProcessor
 
     :return: --
     :rtype: --
     """
-    with open("test_input.csv", "w") as infile:
+    source_file = tmp_path / "test_input.csv"
+    target_file = tmp_path / "test_output.csv"
+
+    with open(source_file, "w") as infile:
         infile.write("1,2")
 
-    yaml_string = """
+    yaml_string = f"""
 --- !Pipeline
 name: Test pipeline
 nodes:
-    - !CsvReader &Input
-        filename: test_input.csv
+    - !StaticPusher
+        target: !Queue &FileInput
+        source:
+        - {source_file}
+    - !StaticPusher
+        target: !Queue &FileOutput
+        source:
+        - {target_file}
+    - !CsvReader
+        filename: *FileInput
         target: !Queue &TestInput
     - !MyNewProcessor
         source: *TestInput
         target: !Queue &MyNewProcessorOutput
     - !CsvWriter
         source: *MyNewProcessorOutput
-        filename: test_output.csv
+        filename: *FileOutput
 """
-    builder = Builder(yaml_string, event_loop)
-    builder.run()
+    builder = PipelineBuilder(yaml_string)
+    pipeline = builder.build()
 
-    with open("test_output.csv") as outfile:
+    await pipeline.run()
+
+    with open(target_file) as outfile:
         data = outfile.read()
         assert int(data) == 3
 
-    os.remove("test_input.csv")
-    os.remove("test_output.csv")
+    os.remove(source_file)
+    os.remove(target_file)
