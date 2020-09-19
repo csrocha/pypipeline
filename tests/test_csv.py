@@ -56,7 +56,7 @@ async def test_csv_writer(mocker):
     await row_queue.put(["4", "5", "6"])
     await row_queue.put(["7", "8", "9"])
     await row_queue.put(StopBucket(1))
-    await row_queue.put(["1", "2", "3" ])
+    await row_queue.put(["1", "2", "3"])
     await row_queue.put(["4", "5", "6"])
     await row_queue.put(["7", "8", "9"])
     await row_queue.put(StopBucket(1))

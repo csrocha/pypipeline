@@ -2,6 +2,7 @@ from yaml import MappingNode
 from asyncio import Queue as AsyncQueue
 from assemply.yaml import add_constructor
 from assemply.exceptions import StopBucket
+import logging
 
 
 class QueueBaseIterator(object):
@@ -135,6 +136,7 @@ class QueueNode:
         self._processed = 0
         self._delivered = 0
         self._context_depth = -1
+        self._domain_queue = {}
 
     def waiting(self):
         return self._received - self._processed
@@ -149,7 +151,7 @@ class QueueNode:
         assert self._received >= self._delivered >= self._processed
 
     def __repr__(self):
-        return f"Queue Status -- received: {self._received} {self._delivered} {self._processed}"
+        return f"<Queue id={id(self)}>\nStatus -- received: {self._received} {self._delivered} {self._processed}"
 
     async def get(self):
         """
@@ -158,7 +160,28 @@ class QueueNode:
         :rtype: Any
         """
         self._delivered += 1
-        return await self._queue.get()
+        data = await self._queue.get()
+        logging.debug(f"Getting from {self._queue}: {data}")
+        return data
+
+    def get_domains(self, data):
+        """
+        Return domain queue for a data
+
+        :return:
+        """
+        if isinstance(data, dict):
+            domains = [
+                domain_queue
+                for domain_id, (domain_filter, domain_queue) in self._domain_queue.items()
+                if all(data[k] == v for k, v in domain_filter.items())
+            ]
+        elif isinstance(data, StopBucket):
+            domains = [q for _, q in self._domain_queue.values()]
+        else:
+            domains = []
+
+        return [self._queue] + domains
 
     async def put(self, data):
         """
@@ -169,8 +192,16 @@ class QueueNode:
         :return: None
         :rtype: None
         """
+        logging.debug(f"Putting to {self._queue}: {data}")
         self._received += 1
-        return await self._queue.put(data)
+        domains = self.get_domains(data)
+        return [await domain.put(data) for domain in domains]
+
+    async def wait(self, condition):
+        event = None
+        while not (event and condition(event)):
+            event = await self.get()
+        return event
 
     def task_done(self):
         """
@@ -237,6 +268,11 @@ class QueueNode:
         """
         await self.put(StopBucket(self._context_depth))
         self._context_depth -= 1
+
+    def only(self, domain):
+        domain_id = '-'.join(f'{k}={v}' for k, v in domain.items())
+        self._domain_queue[domain_id] = (domain, AsyncQueue())
+        return QueueItemIterator(self._domain_queue[domain_id][1])
 
 
 def queue_constructor(loader, node):

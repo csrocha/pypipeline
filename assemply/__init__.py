@@ -2,9 +2,10 @@
 Module to create Pipelines defined in a YAML blueprint.
 """
 
-from assemply.nodes.queuenode import QueueNode
-from assemply.nodes.pipeline import Pipeline
+from .nodes.queuenode import QueueNode
+from .nodes.pipeline import Pipeline
+from .nodes.static import StaticPusher
+from .nodes.web import HTTPServerNode
+from .nodes.csv import CsvReader, CsvWriter
 from .node import node_class, node_sub
 from .pipelinebuilder import PipelineBuilder
-from assemply.nodes.static import StaticPusher
-from assemply.nodes.csv import CsvWriter, CsvReader

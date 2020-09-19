@@ -8,7 +8,7 @@ class PipelineBuilder:
     """
     def __init__(self, blueprint, event_loop=None):
         """
-        Construtor of a YAML builder.
+        Constructor of a YAML builder.
 
         :param blueprint: YAML blueprint.
         :type blueprint: str, io.Stream

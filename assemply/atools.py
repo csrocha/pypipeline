@@ -8,8 +8,6 @@ async def azip(*sources):
 
     :param sources: List of asynchronous iterators.
     :type sources: [async iterators]
-    :param stop_on: aZip stop when find stop_on exception. By default is StopProcess.
-    :type stop_on: Exception
     :return: Generator of tuples
     :rtype: ((sources))
     """

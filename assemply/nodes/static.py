@@ -7,6 +7,7 @@ class StaticPusher:
     StaticPusher node descriptor. Send static data to the target queue defined.
 
     Source: [str]
+
     Target: [str]
     """
     def __init__(self, source=None, target=None):

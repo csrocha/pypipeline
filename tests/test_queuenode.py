@@ -182,3 +182,12 @@ async def test_iterate_3_buckets_1(queue):
     assert [[[data async for data in row] async for row in rows]
             async for rows in queue.buckets(2)] == \
            [[[]]]
+
+
+@pytest.mark.asyncio
+async def test_iterate_only(queue):
+    only_queue = queue.only({'id': 1})
+
+    await raw_push(queue, [{'id': 1}, {'id': 2}, {'id': 1}, StopBucket(0)])
+
+    assert [data async for data in only_queue] == [{'id': 1}, {'id': 1}]

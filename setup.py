@@ -11,5 +11,5 @@ setup(
     description='Pipeline builder from YAML blueprints.',
     setup_requires=['pytest-runner'],
     install_requires=['PyYAML'],
-    tests_require=['pytest', 'pytest-asyncio', 'pytest-pep8', 'pytest-mock']
+    tests_require=['pytest', 'pytest-asyncio', 'pytest-pep8', 'pytest-mock', 'pytest-cov']
 )

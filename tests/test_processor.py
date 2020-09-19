@@ -10,7 +10,7 @@ def node_test(source):
 
 
 @pytest.mark.asyncio
-async def test_nodesub(event_loop, tmp_path):
+async def test_node_sub(event_loop, tmp_path):
     """
     """
     source_file = tmp_path / "test_input.csv"
