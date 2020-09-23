@@ -142,7 +142,9 @@ class JoinProcessor:
 @pytest.mark.asyncio
 async def test_join_pipeline(tmp_path):
     """
-    Test to create and execute a pipeline using the node class MyNewProcessor
+    Test to create and execute a pipeline using the node class Join
+
+    Join user node do a left join between two queues, saving the joined rows and not joined rows in different queues.
 
     :return: --
     :rtype: --

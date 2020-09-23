@@ -9,7 +9,7 @@ setup(
     author='Cristian S. Rocha',
     author_email='csrocha@gmail.com',
     description='Pipeline builder from YAML blueprints.',
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'requests'],
     install_requires=['PyYAML'],
     tests_require=['pytest', 'pytest-asyncio', 'pytest-pep8', 'pytest-mock', 'pytest-cov']
 )
